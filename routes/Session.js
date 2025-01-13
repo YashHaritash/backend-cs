@@ -43,4 +43,39 @@ router.get("/getSessions/:userId", loginRequired, async (req, res) => {
   }
 });
 
+//delete session
+router.delete("/delete/:sessionId", loginRequired, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    await Session.deleteOne({ sessionId });
+    res.send("Session deleted");
+  } catch (err) {
+    return res.status(500).send("Internal server error");
+  }
+});
+
+router.get("/details/:sessionId", loginRequired, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await Session.findById(sessionId).populate("participants");
+    res.send(session);
+  } catch (err) {
+    return res.status(500).send("Internal server error");
+  }
+});
+
+router.post("/leave", loginRequired, async (req, res) => {
+  try {
+    const { sessionId, userId } = req.body;
+    const session = await Session.findById(sessionId);
+    session.participants = session.participants.filter(
+      (participant) => participant.toString() !== userId
+    );
+    await session.save();
+    res.send("Left the session");
+  } catch (err) {
+    return res.status(500).send("Internal server error");
+  }
+});
+
 module.exports = router;
