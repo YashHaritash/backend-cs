@@ -33,9 +33,9 @@ router.post("/join", loginRequired, async (req, res) => {
 });
 
 //get all sessions by a user
-router.get("/getSessions/:userId", loginRequired, async (req, res) => {
+router.get("/getSessions", loginRequired, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const sessions = await Session.find({ creator: userId });
     res.send(sessions);
   } catch (err) {

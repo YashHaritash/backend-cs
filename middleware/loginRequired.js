@@ -10,7 +10,7 @@ const loginRequired = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, "your_jwt_secret_key");
+    const decoded = jwt.verify(token, "yashisagoodboy");
     req.user = decoded;
     next();
   } catch (ex) {
