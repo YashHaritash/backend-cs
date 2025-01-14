@@ -29,17 +29,33 @@ router.get("/getCode/:sessionId", loginRequired, async (req, res) => {
   }
 });
 
-//update code
+// Update code with version history
 router.put("/update/:codeId", loginRequired, async (req, res) => {
   try {
     const { codeId } = req.params;
     const { code } = req.body;
-    const updatedCode = await Code.findOneAndUpdate(
-      { _id: codeId },
-      { code },
-      { new: true }
-    );
-    res.send(updatedCode);
+
+    // Find the current code
+    const currentCode = await Code.findById(codeId);
+
+    if (!currentCode) {
+      return res.status(404).send("Code not found");
+    }
+
+    // Push the old code into the version history before updating
+    currentCode.versionHistory.push({
+      code: currentCode.code,
+      updatedAt: Date.now(),
+    });
+
+    // Update the code field with the new code
+    currentCode.code = code;
+    currentCode.updatedAt = Date.now();
+
+    // Save the updated code
+    await currentCode.save();
+
+    res.send(currentCode);
   } catch (err) {
     return res.status(500).send("Internal server error");
   }

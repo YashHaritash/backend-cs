@@ -32,10 +32,10 @@ router.post("/join", loginRequired, async (req, res) => {
   }
 });
 
-//get all sessions by a user
-router.get("/getSessions", loginRequired, async (req, res) => {
+// Get all sessions by a user with userId as a URL parameter
+router.get("/getSessions/:userId", loginRequired, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const { userId } = req.params;
     const sessions = await Session.find({ creator: userId });
     res.send(sessions);
   } catch (err) {
