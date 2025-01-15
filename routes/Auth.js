@@ -18,7 +18,7 @@ router.post("/login", async (req, res) => {
     jwt.sign({ id: user._id }, SECRET, (err, token) => {
       if (err)
         return res.status(500).json({ message: "Internal server error" });
-      res.json({ token });
+      res.json({ token, name: user.name });
     });
   } catch (err) {
     return res.status(500).json({ message: "Internal server error" });
@@ -34,7 +34,7 @@ router.post("/signup", async (req, res) => {
     jwt.sign({ id: user._id }, SECRET, (err, token) => {
       if (err)
         return res.status(500).json({ message: "Internal server error" });
-      res.json({ token });
+      res.json({ token, name: user.name });
     });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
