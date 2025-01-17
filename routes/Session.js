@@ -26,15 +26,22 @@ router.post("/join", loginRequired, async (req, res) => {
     const { sessionId } = req.body;
     const session = await Session.findOne({ sessionId });
 
-    // Add participant to the session
-    session.participants.push(req.user.id);
-    await session.save();
+    if (!session) {
+      return res.status(404).send("Session not found");
+    }
+
+    // Add participant to the session if not already added
+    if (!session.participants.includes(req.user.id)) {
+      session.participants.push(req.user.id);
+      await session.save();
+    }
 
     // Emit event to notify others that a user joined
-    io.to(sessionId).emit("userJoined", { userId: req.user.id });
+    // io.to(sessionId).emit("userJoined", { userId: req.user.id });
 
     res.send(session);
   } catch (err) {
+    console.error(err);
     return res.status(500).send("Internal server error");
   }
 });

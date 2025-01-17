@@ -9,10 +9,10 @@ const server = http.createServer(app);
 
 // Configure CORS for Express
 const corsOptions = {
-  origin: "http://localhost:5173", // Allow frontend origin
-  methods: ["GET", "POST"], // Specify allowed methods
-  allowedHeaders: ["Content-Type"], // Allow headers
-  credentials: true, // Allow credentials (cookies, etc.)
+  origin: "http://localhost:5173", // Adjust this to your frontend's URL
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow Authorization header
+  credentials: true, // Allow credentials (cookies, authorization headers)
 };
 
 app.use(cors(corsOptions)); // Apply CORS configuration to Express
