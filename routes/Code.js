@@ -22,7 +22,7 @@ router.post("/create", loginRequired, async (req, res) => {
 router.get("/getCode/:sessionId", loginRequired, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const code = await Code.find({ sessionId });
+    const code = await Code.findOne({ sessionId });
     res.send(code);
   } catch {
     return res.status(500).send("Internal server error");
@@ -30,33 +30,28 @@ router.get("/getCode/:sessionId", loginRequired, async (req, res) => {
 });
 
 // Update code with version history
-router.put("/update/:codeId", loginRequired, async (req, res) => {
+router.put("/update/:sessionId", loginRequired, async (req, res) => {
   try {
-    const { codeId } = req.params;
+    const { sessionId } = req.params;
     const { code } = req.body;
 
-    // Find the current code
-    const currentCode = await Code.findById(codeId);
+    let currentCode = await Code.findOne({ sessionId });
 
     if (!currentCode) {
-      return res.status(404).send("Code not found");
+      currentCode = new Code({ sessionId, code, versionHistory: [] });
+    } else {
+      currentCode.versionHistory.push({
+        code: currentCode.code,
+        updatedAt: Date.now(),
+      });
+      currentCode.code = code;
+      currentCode.updatedAt = Date.now();
     }
 
-    // Push the old code into the version history before updating
-    currentCode.versionHistory.push({
-      code: currentCode.code,
-      updatedAt: Date.now(),
-    });
-
-    // Update the code field with the new code
-    currentCode.code = code;
-    currentCode.updatedAt = Date.now();
-
-    // Save the updated code
     await currentCode.save();
-
     res.send(currentCode);
   } catch (err) {
+    console.error("Error updating code:", err);
     return res.status(500).send("Internal server error");
   }
 });

@@ -84,7 +84,9 @@ router.delete("/delete/:sessionId", loginRequired, async (req, res) => {
 router.get("/details/:sessionId", loginRequired, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const session = await Session.findById(sessionId).populate("participants");
+    const session = await Session.findOne({ sessionId }).populate(
+      "participants"
+    );
     res.send(session);
   } catch (err) {
     return res.status(500).send("Internal server error");
