@@ -9,9 +9,22 @@ const io = require("../index");
 const SECRET = "yashisagoodboy";
 
 //create a session
+const generateSessionId = () => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let sessionId = "";
+  for (let i = 0; i < 5; i++) {
+    sessionId += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return sessionId;
+};
+
 router.post("/create", loginRequired, async (req, res) => {
   try {
-    const { sessionId, creator } = req.body;
+    const { creator } = req.body;
+    const sessionId = generateSessionId();
     const session = new Session({ sessionId, creator });
     await session.save();
     res.send(session);
