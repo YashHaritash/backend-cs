@@ -17,7 +17,6 @@ router.post("/create", loginRequired, async (req, res) => {
     return res.status(500).send("Internal server error");
   }
 });
-
 //get all code by a session
 router.get("/getCode/:sessionId", loginRequired, async (req, res) => {
   try {
