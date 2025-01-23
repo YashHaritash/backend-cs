@@ -49,6 +49,34 @@ app.post("/run-cpp", async (req, res) => {
     }
   );
 });
+
+app.post("/run-python", (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).send({ error: "Python code is required!" });
+  }
+
+  // Save the Python code to a file
+  const scriptPath = "./docker-python-runner/script.py";
+  fs.writeFileSync(scriptPath, code);
+
+  // Build and Run the Docker container
+  exec(
+    `cd docker-python-runner && docker build -t python-runner . && docker run --rm python-runner`,
+    (err, stdout, stderr) => {
+      if (err) {
+        return res
+          .status(500)
+          .send({ error: stderr || "Error executing Docker container" });
+      }
+
+      // Return the output to the client
+      res.send({ output: stdout });
+    }
+  );
+});
+
 // Configure Socket.io with CORS
 const io = socket(server, {
   cors: {
