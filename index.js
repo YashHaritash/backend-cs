@@ -77,6 +77,32 @@ app.post("/run-python", (req, res) => {
   );
 });
 
+app.post("/run-c", (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).send({ error: "C code is required!" });
+  }
+
+  // Step 1: Save the C code to a file
+  const codePath = "./docker-c-runner/code.c";
+  fs.writeFileSync(codePath, code);
+
+  // Step 2: Build and run the Docker container
+  exec(
+    `cd docker-c-runner && docker build -t c-runner . && docker run --rm c-runner`,
+    (err, stdout, stderr) => {
+      if (err) {
+        return res
+          .status(500)
+          .send({ error: stderr || "Error executing Docker container" });
+      }
+
+      // Step 3: Return the output to the client
+      res.send({ output: stdout });
+    }
+  );
+});
 // Configure Socket.io with CORS
 const io = socket(server, {
   cors: {
