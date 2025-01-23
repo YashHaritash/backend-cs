@@ -3,6 +3,8 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const http = require("http");
 const socket = require("socket.io");
+const fs = require("fs");
+const exec = require("child_process").exec;
 
 const app = express();
 const server = http.createServer(app);
@@ -22,6 +24,31 @@ app.use("/auth", require("./routes/Auth"));
 app.use("/session", require("./routes/Session"));
 app.use("/code", require("./routes/Code"));
 
+app.post("/run-cpp", async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).send({ error: "C++ code is required!" });
+  }
+
+  // Step 2: Save code to `code.cpp`
+  fs.writeFileSync("docker-cpp-runner/code.cpp", code);
+
+  // Step 3: Build and Run the Docker Container
+  exec(
+    "cd docker-cpp-runner && docker build -t cpp-runner . && docker run --rm cpp-runner",
+    (err, stdout, stderr) => {
+      if (err) {
+        return res
+          .status(500)
+          .send({ error: stderr || "Error executing Docker container" });
+      }
+
+      // Step 4: Return the Output to Client
+      res.send({ output: stdout });
+    }
+  );
+});
 // Configure Socket.io with CORS
 const io = socket(server, {
   cors: {
