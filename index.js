@@ -103,6 +103,34 @@ app.post("/run-c", (req, res) => {
     }
   );
 });
+
+// Route to execute Java code
+app.post("/run-java", (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).send({ error: "Java code is required!" });
+  }
+
+  // Save the Java code to a file
+  const codePath = "./docker-java-runner/Main.java";
+  fs.writeFileSync(codePath, code);
+
+  // Build and run the Docker container
+  exec(
+    `cd docker-java-runner && docker build -t java-runner . && docker run --rm java-runner`,
+    (err, stdout, stderr) => {
+      if (err) {
+        return res
+          .status(500)
+          .send({ error: stderr || "Error executing Docker container" });
+      }
+
+      // Return the output to the client
+      res.send({ output: stdout });
+    }
+  );
+});
 // Configure Socket.io with CORS
 const io = socket(server, {
   cors: {
