@@ -27,6 +27,10 @@ router.post("/create", loginRequired, async (req, res) => {
     const sessionId = generateSessionId();
     const session = new Session({ sessionId, creator });
     await session.save();
+    if (!session.participants.includes(req.user.id)) {
+      session.participants.push(req.user.id);
+      await session.save();
+    }
     res.send(session);
   } catch (err) {
     return res.status(500).send("Internal server error");

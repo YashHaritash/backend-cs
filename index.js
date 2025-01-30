@@ -160,13 +160,14 @@ io.on("connection", (socket) => {
 
   // Broadcast code updates to a specific session (room)
   socket.on("code", (data) => {
-    const { sessionId, code } = data;
+    const { sessionId, code, name } = data;
 
     // Update the session's code state
     sessionCodeMap[sessionId] = code;
 
     // Emit to all clients in the session room except the sender
     socket.to(sessionId).emit("code", code);
+    socket.to(sessionId).emit("name", name);
     console.log(`Code updated in session: ${sessionId}`);
   });
 
