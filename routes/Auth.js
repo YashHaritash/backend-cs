@@ -41,4 +41,107 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+const nodemailer = require("nodemailer");
+
+// Forgot Password Route
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log(`Received forgot-password request for email: ${email}`);
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.error("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const secret = user.password + "-" + user.createdAt;
+    const token = jwt.sign({ id: user._id }, secret, { expiresIn: "1h" });
+    const link = `http://localhost:3000/auth/reset-password/${user._id}/${token}`;
+
+    // Send password reset link via email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "yashharitashdev@gmail.com",
+        pass: "bdre icbj tbak jfiq",
+      },
+    });
+
+    const mailOptions = {
+      from: "yashharitashdev@gmail.com",
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `Click this link to reset your password: ${link}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Password reset link sent to email" });
+  } catch (err) {
+    console.error("Error in forgot-password route:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Reset Password Route (GET)
+router.get("/reset-password/:id/:token", async (req, res) => {
+  try {
+    console.log("Received reset-password request");
+    const { id, token } = req.params;
+    console.log(`ID: ${id}, Token: ${token}`);
+
+    const user = await User.findById(id);
+    if (!user) {
+      console.error("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const secret = user.password + "-" + user.createdAt;
+    try {
+      jwt.verify(token, secret);
+      // Render the page where the user can enter a new password
+      res.render("index", { email: user.email });
+    } catch (err) {
+      console.error("Invalid token:", err);
+      res.status(401).json({ message: "Invalid token" });
+    }
+  } catch (err) {
+    console.error("Error in reset-password route:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Reset Password Route (POST)
+router.post("/reset-password/:id/:token", async (req, res) => {
+  try {
+    const { id, token } = req.params;
+    const { password } = req.body;
+    const user = await User.findById(id);
+    if (!user) {
+      console.error("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const secret = user.password + "-" + user.createdAt;
+    try {
+      jwt.verify(token, secret);
+      // Update the user's password
+      user.password = password;
+      await user.save();
+
+      // After password update, redirect to the login page or send success message
+      // res.status(200).json({ message: "Password updated successfully" });
+      // If you want to redirect to login page:
+      res.redirect("http://localhost:5173/login");
+    } catch (err) {
+      console.error("Invalid token:", err);
+      res.status(401).json({ message: "Invalid token" });
+    }
+  } catch (err) {
+    console.error("Error in reset-password route:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;

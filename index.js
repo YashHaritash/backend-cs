@@ -4,11 +4,13 @@ const mongoose = require("mongoose");
 const http = require("http");
 const socket = require("socket.io");
 const fs = require("fs");
+const { url } = require("inspector");
 const exec = require("child_process").exec;
-
 const app = express();
 const server = http.createServer(app);
 
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: false }));
 // Configure CORS for Express
 const corsOptions = {
   origin: "http://localhost:5173", // Adjust this to your frontend's URL
