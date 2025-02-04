@@ -149,6 +149,15 @@ const sessionCodeMap = {};
 io.on("connection", (socket) => {
   console.log("A user connected");
 
+  // Chat functionality
+  socket.on("chat", (data) => {
+    const { sessionId, message, name } = data;
+
+    if (!sessionId || !message || !name) return;
+
+    io.to(sessionId).emit("chat", { name, message });
+  });
+
   // Handle joining a session
   socket.on("joinSession", (sessionId) => {
     socket.join(sessionId);
@@ -167,9 +176,9 @@ io.on("connection", (socket) => {
     // Update the session's code state
     sessionCodeMap[sessionId] = code;
 
-    // Emit to all clients in the session room except the sender
-    socket.to(sessionId).emit("code", code);
-    socket.to(sessionId).emit("name", name);
+    // Emit to all clients in the session room
+    io.to(sessionId).emit("code", code);
+    io.to(sessionId).emit("name", name);
     console.log(`Code updated in session: ${sessionId}`);
   });
 
