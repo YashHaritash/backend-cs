@@ -149,13 +149,17 @@ const sessionCodeMap = {};
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  // Chat functionality
+  // Chat functionality (Supports both text & audio)
   socket.on("chat", (data) => {
-    const { sessionId, message, name } = data;
+    const { sessionId, message, name, type } = data;
 
     if (!sessionId || !message || !name) return;
 
-    io.to(sessionId).emit("chat", { name, message });
+    // Ensure type is either "text" or "audio"
+    const messageType = type === "audio" ? "audio" : "text";
+
+    // Emit message with correct type
+    io.to(sessionId).emit("chat", { name, message, type: messageType });
   });
 
   // Handle joining a session
