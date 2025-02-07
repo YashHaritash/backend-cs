@@ -5,12 +5,16 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true, // Ensures email is unique
+    unique: true,
     lowercase: true,
   },
   password: {
     type: String,
-    required: true,
+    required: false,
+  },
+  googleId: {
+    type: String,
+    required: false,
   },
   name: {
     type: String,
@@ -22,10 +26,11 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Hash password before saving it to the database
+// Hash password before saving it to the database (only for regular sign-ups)
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  if (this.password && this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
   next();
 });
 

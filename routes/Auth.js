@@ -2,8 +2,45 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 
 const SECRET = "yashisagoodboy";
+
+//google login
+const client = new OAuth2Client(
+  "1032017398197-cv4oob1c460csg4mhpdkkfla4hdhskqk.apps.googleusercontent.com"
+);
+router.post("/google", async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    // Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience:
+        "1032017398197-cv4oob1c460csg4mhpdkkfla4hdhskqk.apps.googleusercontent.com",
+    });
+
+    const { name, email, sub } = ticket.getPayload(); // sub is the Google user ID
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // If user doesn't exist, create a new user
+      user = await User.create({ name, email, googleId: sub });
+    }
+
+    // Generate JWT token
+    const authToken = jwt.sign({ userId: user._id }, SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.json({ token: authToken, name: user.name, id: user._id });
+  } catch (error) {
+    console.error(error);
+    res.status(401).json({ message: "Invalid Google token" });
+  }
+});
 
 // no login required
 router.post("/login", async (req, res) => {
