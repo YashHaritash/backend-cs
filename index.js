@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -13,7 +14,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 // Configure CORS for Express
 const corsOptions = {
-  origin: "http://localhost:5173", // Adjust this to your frontend's URL
+  origin: process.env.CORS_ORIGIN, // Use env variable
   methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
   allowedHeaders: ["Content-Type", "Authorization"], // Allow Authorization header
   credentials: true, // Allow credentials (cookies, authorization headers)
@@ -193,7 +194,7 @@ io.on("connection", (socket) => {
 });
 
 mongoose
-  .connect("mongodb://localhost:27017/cs", {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -204,8 +205,10 @@ mongoose
     console.log("MongoDB connection error:", err);
   });
 
-server.listen(3000, () => {
-  console.log("Server is running on port http://localhost:3000");
+server.listen(process.env.PORT || 3000, () => {
+  console.log(
+    `Server is running on port http://localhost:${process.env.PORT || 3000}`
+  );
 });
 
 module.exports = io;

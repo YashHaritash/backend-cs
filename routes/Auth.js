@@ -4,12 +4,10 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 
-const SECRET = "yashisagoodboy";
+const SECRET = process.env.JWT_SECRET;
 
 //google login
-const client = new OAuth2Client(
-  "1032017398197-cv4oob1c460csg4mhpdkkfla4hdhskqk.apps.googleusercontent.com"
-);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 router.post("/google", async (req, res) => {
   const { token } = req.body;
 
@@ -17,8 +15,7 @@ router.post("/google", async (req, res) => {
     // Verify Google token
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience:
-        "1032017398197-cv4oob1c460csg4mhpdkkfla4hdhskqk.apps.googleusercontent.com",
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const { name, email, sub } = ticket.getPayload(); // sub is the Google user ID
@@ -100,8 +97,8 @@ router.post("/forgot-password", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "yashharitashdev@gmail.com",
-        pass: "bdre icbj tbak jfiq",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
