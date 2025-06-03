@@ -27,27 +27,43 @@ app.use("/auth", require("./routes/Auth"));
 app.use("/session", require("./routes/Session"));
 app.use("/code", require("./routes/Code"));
 
-app.post("/run-cpp", async (req, res) => {
+app.post("/run-c", (req, res) => {
   const { code } = req.body;
-
   if (!code) {
-    return res.status(400).send({ error: "C++ code is required!" });
+    return res.status(400).send({ error: "C code is required!" });
   }
-
-  // Step 2: Save code to `code.cpp`
-  fs.writeFileSync("docker-cpp-runner/code.cpp", code);
-
-  // Step 3: Build and Run the Docker Container
+  const codePath = "/tmp/code.c";
+  const execPath = "/tmp/code.out";
+  fs.writeFileSync(codePath, code);
   exec(
-    "cd docker-cpp-runner && docker build -t cpp-runner . && docker run --rm cpp-runner",
+    `gcc ${codePath} -o ${execPath} && timeout 2s ${execPath}`,
     (err, stdout, stderr) => {
       if (err) {
         return res
           .status(500)
-          .send({ error: stderr || "Error executing Docker container" });
+          .send({ error: stderr || "Error running C code" });
       }
+      res.send({ output: stdout });
+    }
+  );
+});
 
-      // Step 4: Return the Output to Client
+app.post("/run-cpp", (req, res) => {
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).send({ error: "C++ code is required!" });
+  }
+  const codePath = "/tmp/code.cpp";
+  const execPath = "/tmp/codecpp.out";
+  fs.writeFileSync(codePath, code);
+  exec(
+    `g++ ${codePath} -o ${execPath} && timeout 2s ${execPath}`,
+    (err, stdout, stderr) => {
+      if (err) {
+        return res
+          .status(500)
+          .send({ error: stderr || "Error running C++ code" });
+      }
       res.send({ output: stdout });
     }
   );
@@ -55,81 +71,36 @@ app.post("/run-cpp", async (req, res) => {
 
 app.post("/run-python", (req, res) => {
   const { code } = req.body;
-
   if (!code) {
     return res.status(400).send({ error: "Python code is required!" });
   }
-
-  // Save the Python code to a file
-  const scriptPath = "./docker-python-runner/script.py";
+  const scriptPath = "/tmp/script.py";
   fs.writeFileSync(scriptPath, code);
-
-  // Build and Run the Docker container
-  exec(
-    `cd docker-python-runner && docker build -t python-runner . && docker run --rm python-runner`,
-    (err, stdout, stderr) => {
-      if (err) {
-        return res
-          .status(500)
-          .send({ error: stderr || "Error executing Docker container" });
-      }
-
-      // Return the output to the client
-      res.send({ output: stdout });
+  exec(`timeout 2s python3 ${scriptPath}`, (err, stdout, stderr) => {
+    if (err) {
+      return res
+        .status(500)
+        .send({ error: stderr || "Error running Python code" });
     }
-  );
+    res.send({ output: stdout });
+  });
 });
 
-app.post("/run-c", (req, res) => {
-  const { code } = req.body;
-
-  if (!code) {
-    return res.status(400).send({ error: "C code is required!" });
-  }
-
-  // Step 1: Save the C code to a file
-  const codePath = "./docker-c-runner/code.c";
-  fs.writeFileSync(codePath, code);
-
-  // Step 2: Build and run the Docker container
-  exec(
-    `cd docker-c-runner && docker build -t c-runner . && docker run --rm c-runner`,
-    (err, stdout, stderr) => {
-      if (err) {
-        return res
-          .status(500)
-          .send({ error: stderr || "Error executing Docker container" });
-      }
-
-      // Step 3: Return the output to the client
-      res.send({ output: stdout });
-    }
-  );
-});
-
-// Route to execute Java code
 app.post("/run-java", (req, res) => {
   const { code } = req.body;
-
   if (!code) {
     return res.status(400).send({ error: "Java code is required!" });
   }
-
-  // Save the Java code to a file
-  const codePath = "./docker-java-runner/Main.java";
+  const codePath = "/tmp/Main.java";
   fs.writeFileSync(codePath, code);
-
-  // Build and run the Docker container
   exec(
-    `cd docker-java-runner && docker build -t java-runner . && docker run --rm java-runner`,
+    `javac ${codePath} && timeout 2s java -cp /tmp Main`,
     (err, stdout, stderr) => {
       if (err) {
         return res
           .status(500)
-          .send({ error: stderr || "Error executing Docker container" });
+          .send({ error: stderr || "Error running Java code" });
       }
-
-      // Return the output to the client
       res.send({ output: stdout });
     }
   );
