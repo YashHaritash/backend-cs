@@ -108,7 +108,7 @@ app.post("/run-java", (req, res) => {
 // Configure Socket.io with CORS
 const io = socket(server, {
   cors: {
-    origin: "http://localhost:5173", // Allow frontend origin
+    origin: process.env.CORS_ORIGIN, // Use env variable for allowed origin
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
